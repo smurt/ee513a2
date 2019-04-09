@@ -1,0 +1,2 @@
+1) Note that when configuring the VM, I had to change the network settings to 'bridge adapter'
+and then restart the Ubuntu machine, so the router would give us a working IP address.
