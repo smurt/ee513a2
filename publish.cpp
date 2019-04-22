@@ -38,7 +38,7 @@ float getCPUTemperature() {        // get the CPU temperature
 void getCurrentTime(char* currentTime) {
    time_t rpiTime = time(NULL);
    struct tm tm = *localtime(&rpiTime);
-   sprintf(currentTime, "%d:%d:%d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+   sprintf(currentTime, "%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
 }
 
 int main(int argc, char* argv[]) {
