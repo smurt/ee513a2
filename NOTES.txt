@@ -3,3 +3,7 @@ and then restart the Ubuntu machine, so the router would give us a working IP ad
 
 2) To start a 'topic' for publishing, subscribing, etc, this was the command (run on Ubuntu):
 mosquitto_sub -t 'ee513/test' -d -u sinead -P murtagh
+
+3) subscribe1 and subscripe2 applications must be compiled with json-c:
+g++ subscribe1.cpp -o subscribe1 -lpaho-mqtt3c -ljson-c
+g++ subscribe2.cpp -o subscribe2 -lpaho-mqtt3c -ljson-c
