@@ -3,6 +3,8 @@
 #include "string.h"
 #include "MQTTClient.h"
 
+#include<json-c/json.h>
+
 #define ADDRESS     "tcp://192.168.0.11:1883"
 #define CLIENTID    "pi3"
 #define AUTHMETHOD  "sinead"
@@ -12,6 +14,10 @@
 #define QOS         1
 #define TIMEOUT     10000L
 
+/*
+ * This subscription will store and print current time and CPU temperature.
+ */
+
 volatile MQTTClient_deliveryToken deliveredtoken;
 
 void delivered(void *context, MQTTClient_deliveryToken dt) {
@@ -20,17 +26,17 @@ void delivered(void *context, MQTTClient_deliveryToken dt) {
 }
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-    int i;
-    char* payloadptr;
-    printf("Message arrived\n");
-    printf("     topic: %s\n", topicName);
-    printf("   message: ");
-    payloadptr = (char*) message->payload;
-    for(i=0; i<message->payloadlen; i++) {
-        putchar(*payloadptr++);
-    }
-    putchar('\n');
-    // PUT CHANGES HERE????
+    // using json-c library to parse json message
+    struct json_object *parsed_json;
+    struct json_object *temp;
+    struct json_object *time;
+
+    parsed_json = json_tokener_parse((char*)message->payload);
+    json_object_object_get_ex(parsed_json, "CPUTemp", &temp);
+    json_object_object_get_ex(parsed_json, "CurrentTime", &time);
+    printf("Current Time: %s    (topic: %s)\n", json_object_get_string(time), topicName);
+    printf("CPU Temp:     %d degrees  (topic: %s)\n\n", json_object_get_int(temp), topicName);
+
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
     return 1;
