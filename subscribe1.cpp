@@ -31,9 +31,6 @@ void removeGravity(int &rawX,
     accelX = rawX * alpha + (accelX * (1.0 - alpha));
     accelY = rawY * alpha + (accelY * (1.0 - alpha));
     accelZ = rawZ * alpha + (accelZ * (1.0 - alpha));
-    //int accelX = rawX * 3.9;
-    //int accelY = rawY * 3.9;
-    //int accelZ = rawZ * 3.9;
 }
 
 double getPitch(int rawX, int rawY, int rawZ) {
