@@ -11,7 +11,7 @@
 #define AUTHTOKEN   "murtagh"
 #define TOPIC       "ee513/test"
 #define PAYLOAD     "Hello World!"
-#define QOS         1
+#define QOS         1 
 #define TIMEOUT     10000L
 
 /*
@@ -21,7 +21,7 @@
 volatile MQTTClient_deliveryToken deliveredtoken;
 
 void delivered(void *context, MQTTClient_deliveryToken dt) {
-    printf("Message with token value %d delivery confirmed\n", dt);
+    printf("SUBSCRIBE2: Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 }
 
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     int rc;
     int ch;
 
-    MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_USER, NULL);
     opts.keepAliveInterval = 20;
     opts.cleansession = 1;
     opts.username = AUTHMETHOD;

@@ -33,30 +33,30 @@ void removeGravity(int &rawX,
     accelZ = rawZ * alpha + (accelZ * (1.0 - alpha));
 }
 
-double getPitch(int rawX, int rawY, int rawZ) {
+int getPitch(int rawX, int rawY, int rawZ) {
 
     double accelX, accelY, accelZ = 0;
     // remove gravity
     removeGravity(rawX,rawY,rawZ,accelX,accelY,accelZ);
 
-    double pitch = (atan2(accelX, sqrt(accelY*accelY + accelZ*accelZ))*180.0)/M_PI;
+    int pitch = (atan2(accelX, sqrt(accelY*accelY + accelZ*accelZ))*180.0)/M_PI;
     return pitch;
 }
 
-double getRoll(int rawX, int rawY, int rawZ) {
+int getRoll(int rawX, int rawY, int rawZ) {
 
     double accelX, accelY, accelZ = 0;
     // remove gravity
     removeGravity(rawX,rawY,rawZ,accelX,accelY,accelZ);
 
-    double roll = (atan2(-accelY, accelZ)*180.0)/M_PI;
+    int roll = (atan2(-accelY, accelZ)*180.0)/M_PI;
     return roll;
 }
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
 void delivered(void *context, MQTTClient_deliveryToken dt) {
-    printf("Message with token value %d delivery confirmed\n", dt);
+    printf("SUBSCRIBE1: Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 }
 

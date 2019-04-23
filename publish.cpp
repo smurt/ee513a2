@@ -23,7 +23,7 @@ using namespace std;
 #define AUTHMETHOD "sinead"
 #define AUTHTOKEN  "murtagh"
 #define TOPIC      "ee513/test"
-#define QOS        1
+//#define QOS      1
 #define TIMEOUT    10000L
 
 float getCPUTemperature() {        // get the CPU temperature
@@ -45,6 +45,7 @@ int main(int argc, char* argv[]) {
    char str_payload[500];          // Set your max message size here
    MQTTClient client;
    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
+   MQTTClient_willOptions wopts = MQTTClient_willOptions_initializer; // last will message!
    MQTTClient_message pubmsg = MQTTClient_message_initializer;
    MQTTClient_deliveryToken token;
    MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
@@ -52,6 +53,13 @@ int main(int argc, char* argv[]) {
    opts.cleansession = 1;
    opts.username = AUTHMETHOD;
    opts.password = AUTHTOKEN;
+   // setting up keep-alive message
+   opts.will = &wopts;
+   opts.will->message = "Raspberry Pi has gone offline!";
+   opts.will->qos = 1; // make sure message is recieved by each subscriber at least once
+   opts.will->retained = 0;
+   opts.will->topicName = TOPIC;
+
    int rc;
    if ((rc = MQTTClient_connect(client, &opts)) != MQTTCLIENT_SUCCESS) {
       cout << "Failed to connect, return code " << rc << endl;
@@ -61,39 +69,43 @@ int main(int argc, char* argv[]) {
    enableAccelerometer();
 
    // send data 5x (so we can see accelerometer changes)
-   for (int i=0; i<5; i++) {
-      // get Accelerometer Data
-      int xData,yData,zData = 0;
-      readAccelerometerData(xData,yData,zData);
-      // get CPU Temp Data
-      float cpuTemp = getCPUTemperature();
-      // get RPi Time
-      char rpiTime[10];
-      getCurrentTime(rpiTime);
+   for (int qos=0; qos<3; qos++) { // send messages at different QoS levels
+      for (int i=0; i<3; i++) {
+         // get Accelerometer Data
+         int xData,yData,zData = 0;
+         readAccelerometerData(xData,yData,zData);
+         // get CPU Temp Data
+         float cpuTemp = getCPUTemperature();
+         // get RPi Time
+         char rpiTime[10];
+         getCurrentTime(rpiTime);
 
-      // built JSON
-      sprintf(str_payload, "\n{\n");
-      sprintf(str_payload + strlen(str_payload), "    \"CPUTemp\": %f,\n", cpuTemp);
-      sprintf(str_payload + strlen(str_payload), "    \"CurrentTime\": \"%s\",\n", rpiTime);
-      sprintf(str_payload + strlen(str_payload), "    \"Accelerometer\": {\n");
-      sprintf(str_payload + strlen(str_payload), "        \"X\": %d,\n", xData);
-      sprintf(str_payload + strlen(str_payload), "        \"Y\": %d,\n", yData);
-      sprintf(str_payload + strlen(str_payload), "        \"Z\": %d,\n", zData);
-      sprintf(str_payload + strlen(str_payload), "    }\n");
-      sprintf(str_payload + strlen(str_payload), "}");
+         // built JSON
+         sprintf(str_payload, "\n{\n");
+         sprintf(str_payload + strlen(str_payload), "    \"CPUTemp\": %f,\n", cpuTemp);
+         sprintf(str_payload + strlen(str_payload), "    \"CurrentTime\": \"%s\",\n", rpiTime);
+         sprintf(str_payload + strlen(str_payload), "    \"Accelerometer\": {\n");
+         sprintf(str_payload + strlen(str_payload), "        \"X\": %d,\n", xData);
+         sprintf(str_payload + strlen(str_payload), "        \"Y\": %d,\n", yData);
+         sprintf(str_payload + strlen(str_payload), "        \"Z\": %d,\n", zData);
+         sprintf(str_payload + strlen(str_payload), "    }\n");
+         sprintf(str_payload + strlen(str_payload), "}");
 
-      // publish
-      pubmsg.payload = str_payload;
-      pubmsg.payloadlen = strlen(str_payload);
-      pubmsg.qos = QOS;
-      pubmsg.retained = 0;
-      MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
-      cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
-           " seconds for publication of " << str_payload <<
-           " \non topic " << TOPIC << " for ClientID: " << CLIENTID << endl;
-      rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-      cout << "Message with token " << (int)token << " delivered." << endl;
-      usleep(1000000);
+         // publish
+         pubmsg.payload = str_payload;
+         pubmsg.payloadlen = strlen(str_payload);
+         pubmsg.qos = qos;
+         pubmsg.retained = 0;
+         MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
+         cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
+              " seconds for publication of " << str_payload <<
+              " \non topic " << TOPIC << " for ClientID: " << CLIENTID << endl;
+         rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
+         cout << "Message with token " << (int)token << " delivered." << endl;
+	 cout << "QoS level " << qos << endl;
+	 cout << endl;
+         usleep(1000000);
+      }
    }
    // disable accelerometer measurements after use (RECOMMENDED)
    disableAccelerometer();
